@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Requisitos Agrocalidad — Bellaflor</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;1,300&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --verde-oscuro: #0e2d1a;
+    --verde-medio: #1a4a2e;
+    --verde-vivo: #2d8a52;
+    --verde-claro: #4ebb7f;
+    --verde-suave: #a8e6bf;
+    --crema: #f4efe6;
+    --crema-oscuro: #e8dfc9;
+    --rojo: #c0392b;
+    --amarillo: #e67e22;
+    --gris: #8a8a8a;
+    --texto: #1a1a1a;
+    --sombra: rgba(14,45,26,0.15);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--crema); font-family: 'DM Sans', sans-serif; color: var(--texto); min-height: 100vh; }
+
+  header { background: var(--verde-oscuro); }
+  .header-inner { display: flex; align-items: center; gap: 16px; padding: 22px 32px; border-bottom: 1px solid rgba(168,230,191,0.12); }
+  .logo-badge { width: 46px; height: 46px; background: linear-gradient(135deg, var(--verde-vivo), var(--verde-claro)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .header-text h1 { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 600; color: var(--verde-suave); }
+  .header-text p { font-size: 11px; color: rgba(168,230,191,0.55); letter-spacing: 1.2px; text-transform: uppercase; margin-top: 2px; font-family: 'DM Mono', monospace; }
+
+  .main { max-width: 1100px; margin: 0 auto; padding: 32px 24px 80px; display: grid; grid-template-columns: 320px 1fr; gap: 24px; align-items: start; }
+  @media (max-width: 800px) { .main { grid-template-columns: 1fr; } }
+
+  .card { background: #fff; border-radius: 16px; box-shadow: 0 2px 12px var(--sombra), 0 0 0 1px rgba(14,45,26,0.06); overflow: hidden; margin-bottom: 16px; }
+  .card-header { background: var(--verde-medio); padding: 12px 18px; }
+  .card-header h2 { font-family: 'Fraunces', serif; font-size: 14px; font-weight: 600; color: var(--verde-suave); }
+  .card-body { padding: 18px; }
+
+  label.field-label { display: block; font-size: 10px; font-weight: 500; color: var(--verde-vivo); text-transform: uppercase; letter-spacing: 1.1px; margin-bottom: 6px; font-family: 'DM Mono', monospace; }
+  select { width: 100%; padding: 9px 12px; border: 1.5px solid var(--crema-oscuro); border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--texto); background: var(--crema); margin-bottom: 14px; }
+  select:focus { outline: none; border-color: var(--verde-vivo); }
+
+  button.btn-principal { width: 100%; padding: 12px; border: none; border-radius: 10px; background: var(--verde-vivo); color: #fff; font-weight: 500; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  button.btn-principal:hover { background: var(--verde-medio); }
+  button.btn-principal:disabled { background: var(--gris); cursor: not-allowed; }
+
+  .estado-box { font-size: 12.5px; padding: 10px 12px; border-radius: 8px; margin-top: 12px; display: none; }
+  .estado-box.visible { display: block; }
+  .estado-box.info { background: #eef7f0; color: var(--verde-medio); }
+  .estado-box.error { background: #fbeceb; color: var(--rojo); }
+
+  .spinner { width: 13px; height: 13px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: girar 0.7s linear infinite; display: inline-block; }
+  @keyframes girar { to { transform: rotate(360deg); } }
+
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; font-family: 'DM Mono', monospace; white-space: nowrap; }
+  .badge-ok { background: #e3f6ea; color: #1e7a44; }
+  .badge-sin { background: #f0f0f0; color: #666; }
+  .badge-no { background: #fdecea; color: var(--rojo); }
+  .badge-err { background: #fdecea; color: var(--rojo); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  thead th { text-align: left; padding: 10px 12px; background: var(--crema-oscuro); font-family: 'DM Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--verde-medio); position: sticky; top: 0; }
+  tbody td { padding: 10px 12px; border-bottom: 1px solid var(--crema-oscuro); vertical-align: top; }
+  tbody tr:hover { background: #fafaf6; }
+  .td-requisitos { max-width: 420px; color: #444; font-size: 12px; line-height: 1.5; white-space: pre-line; }
+  .celda-vacia { text-align: center; color: #999; padding: 30px; font-size: 13px; }
+
+  .filtro-input { width: 100%; padding: 8px 12px; border: 1.5px solid var(--crema-oscuro); border-radius: 8px; font-size: 13px; margin-bottom: 12px; font-family: 'DM Sans', sans-serif; }
+
+  .resultado-nuevo { border: 2px solid var(--verde-vivo); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo-badge">🌿</div>
+    <div class="header-text">
+      <h1>Requisitos Agrocalidad</h1>
+      <p>Bellaflor · Consulta de comercio exterior</p>
+    </div>
+  </div>
+</header>
+
+<div class="main">
+  <div class="panel-form">
+    <div class="card">
+      <div class="card-header"><h2>Nueva verificación</h2></div>
+      <div class="card-body">
+        <label class="field-label">País destino</label>
+        <select id="selectPais"><option value="">Cargando países…</option></select>
+
+        <label class="field-label">Especie</label>
+        <select id="selectEspecie"><option value="">Cargando especies…</option></select>
+
+        <label class="field-label">Tipo de movimiento</label>
+        <select id="selectTipo">
+          <option value="Exportación" selected>Exportación</option>
+          <option value="Importación">Importación</option>
+          <option value="Tránsito">Tránsito</option>
+          <option value="Nacional">Nacional</option>
+        </select>
+
+        <label class="field-label">Área</label>
+        <select id="selectArea">
+          <option value="SV" selected>Sanidad Vegetal</option>
+          <option value="SA">Sanidad Animal</option>
+          <option value="IAP">Productos agrícolas</option>
+          <option value="IAV">Productos pecuarios</option>
+          <option value="IAF">Productos fertilizantes</option>
+        </select>
+
+        <button class="btn-principal" id="btnVerificar" onclick="verificar()">
+          <span id="btnIcon">🔍</span> <span id="btnTexto">Verificar en Agrocalidad</span>
+        </button>
+
+        <div class="estado-box" id="estadoBox"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-resultados">
+    <div class="card">
+      <div class="card-header"><h2>Requisitos ya verificados</h2></div>
+      <div class="card-body">
+        <input class="filtro-input" id="filtroTexto" placeholder="Filtrar por país o especie…" oninput="renderTabla()">
+        <div style="max-height: 560px; overflow: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Especie</th>
+                <th>País</th>
+                <th>Estado</th>
+                <th>Detalle</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyResultados">
+              <tr><td colspan="4" class="celda-vacia">Cargando…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Configuración Supabase ──
+const SUPABASE_URL = "https://kgpzhwocygonppblgmpm.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtncHpod29jeWdvbnBwYmxnbXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNDE1NjIsImV4cCI6MjA5NjYxNzU2Mn0.kqvUMW-ngcwLWqLHAl0ca6_qf5xq7An26zADpcg4V1M";
+const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/trigger-agrocalidad-check`;
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let resultados = [];
+let verificando = false;
+
+const ESTADO_INFO = {
+  CON_REQUISITOS:            { badge: "badge-ok",  label: "✅ Con requisitos" },
+  SIN_REQUISITOS_REGISTRADOS:{ badge: "badge-sin", label: "➖ Sin requisitos registrados" },
+  NO_ENCONTRADO:              { badge: "badge-no",  label: "❓ No encontrado" },
+  ERROR:                       { badge: "badge-err", label: "⚠ Error" },
+};
+
+function esc(s) {
+  if (!s) return "";
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+// ── Cargar listas de países y especies ──
+async function cargarListas() {
+  const [{ data: paises, error: errPaises }, { data: especies, error: errEspecies }] = await Promise.all([
+    sb.from("countries").select("id, name_es").order("name_es"),
+    sb.from("species").select("id, name").eq("active", true).order("name"),
+  ]);
+
+  const selPais = document.getElementById("selectPais");
+  const selEsp = document.getElementById("selectEspecie");
+
+  if (errPaises || errEspecies) {
+    selPais.innerHTML = '<option value="">Error cargando países</option>';
+    selEsp.innerHTML = '<option value="">Error cargando especies</option>';
+    return;
+  }
+
+  selPais.innerHTML = '<option value="">Seleccione un país…</option>' +
+    paises.map(p => `<option value="${p.id}">${esc(p.name_es)}</option>`).join("");
+  selEsp.innerHTML = '<option value="">Seleccione una especie…</option>' +
+    especies.map(e => `<option value="${e.id}">${esc(e.name)}</option>`).join("");
+}
+
+// ── Cargar tabla de resultados existentes ──
+async function cargarResultados() {
+  const { data, error } = await sb
+    .from("agrocalidad_requirements")
+    .select("id, status, matched_product_name, scientific_name, tariff_heading, requirements, queried_at, species:species_id(name), country:country_id(name_es)")
+    .order("queried_at", { ascending: false })
+    .limit(500);
+
+  if (error) {
+    document.getElementById("tbodyResultados").innerHTML =
+      `<tr><td colspan="4" class="celda-vacia">Error cargando resultados: ${esc(error.message)}</td></tr>`;
+    return;
+  }
+  resultados = data || [];
+  renderTabla();
+}
+
+function renderTabla(idResaltar) {
+  const filtro = (document.getElementById("filtroTexto").value || "").toLowerCase();
+  const tbody = document.getElementById("tbodyResultados");
+
+  const filtrados = resultados.filter(r => {
+    if (!filtro) return true;
+    const texto = `${r.species?.name || ""} ${r.country?.name_es || ""}`.toLowerCase();
+    return texto.includes(filtro);
+  });
+
+  if (filtrados.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" class="celda-vacia">Sin resultados${filtro ? " para ese filtro" : " todavía"}</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtrados.map(r => {
+    const info = ESTADO_INFO[r.status] || { badge: "badge-err", label: r.status };
+    const detalle = [
+      r.scientific_name ? `Nombre científico: ${r.scientific_name}` : "",
+      r.tariff_heading ? `Partida: ${r.tariff_heading}` : "",
+      r.requirements || "",
+    ].filter(Boolean).join("\n");
+    const resaltar = r.id === idResaltar ? "resultado-nuevo" : "";
+    return `
+      <tr class="${resaltar}">
+        <td>${esc(r.species?.name)}</td>
+        <td>${esc(r.country?.name_es)}</td>
+        <td><span class="badge ${info.badge}">${info.label}</span></td>
+        <td class="td-requisitos">${esc(detalle).substring(0, 500)}${detalle.length > 500 ? "…" : ""}</td>
+      </tr>`;
+  }).join("");
+}
+
+// ── Estado del formulario ──
+function mostrarEstado(msg, tipo) {
+  const box = document.getElementById("estadoBox");
+  box.textContent = msg;
+  box.className = `estado-box visible ${tipo}`;
+}
+function ocultarEstado() {
+  document.getElementById("estadoBox").className = "estado-box";
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ── Disparar verificación ──
+async function verificar() {
+  if (verificando) return;
+
+  const speciesId = document.getElementById("selectEspecie").value;
+  const countryId = document.getElementById("selectPais").value;
+  const tradeType = document.getElementById("selectTipo").value;
+  const areaCode = document.getElementById("selectArea").value;
+
+  if (!speciesId || !countryId) {
+    mostrarEstado("Selecciona un país y una especie.", "error");
+    return;
+  }
+
+  verificando = true;
+  const btn = document.getElementById("btnVerificar");
+  btn.disabled = true;
+  document.getElementById("btnIcon").innerHTML = '<span class="spinner"></span>';
+  document.getElementById("btnTexto").textContent = "Enviando solicitud…";
+  ocultarEstado();
+
+  try {
+    const resp = await fetch(EDGE_FUNCTION_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+        "apikey": SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({ species_id: speciesId, country_id: countryId, trade_type: tradeType, area_code: areaCode }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || `Error ${resp.status}`);
+
+    await esperarResultado(data.request_id);
+
+  } catch (e) {
+    mostrarEstado(`No se pudo completar la verificación: ${e.message}`, "error");
+  } finally {
+    verificando = false;
+    btn.disabled = false;
+    document.getElementById("btnIcon").textContent = "🔍";
+    document.getElementById("btnTexto").textContent = "Verificar en Agrocalidad";
+  }
+}
+
+// ── Sondear el estado de la solicitud hasta que termine ──
+async function esperarResultado(requestId) {
+  const maxIntentos = 40; // ~40 * 4s = 160s de espera máxima
+  for (let i = 0; i < maxIntentos; i++) {
+    document.getElementById("btnTexto").textContent = `Consultando en Agrocalidad… (${i * 4}s)`;
+    mostrarEstado("Tu solicitud fue enviada. Esto puede tardar entre 30 y 90 segundos mientras el navegador automatizado consulta el sitio real de Agrocalidad.", "info");
+
+    const { data: solicitud, error } = await sb
+      .from("agrocalidad_requests")
+      .select("status, requirement_id, error_message")
+      .eq("id", requestId)
+      .single();
+
+    if (error) {
+      mostrarEstado(`Error consultando el estado: ${error.message}`, "error");
+      return;
+    }
+
+    if (solicitud.status === "done") {
+      await cargarResultados();
+      renderTabla(solicitud.requirement_id);
+      mostrarEstado("✅ Verificación completada. Resultado agregado a la tabla.", "info");
+      return;
+    }
+    if (solicitud.status === "error") {
+      mostrarEstado(`⚠ Error en la verificación: ${solicitud.error_message || "desconocido"}`, "error");
+      return;
+    }
+
+    await sleep(4000);
+  }
+  mostrarEstado("La verificación está tardando más de lo esperado. Revisa la tabla en unos minutos.", "error");
+}
+
+// ── Inicio ──
+cargarListas();
+cargarResultados();
+</script>
+
+</body>
+</html>
