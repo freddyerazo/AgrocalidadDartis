@@ -39,19 +39,19 @@ index.html sondea la solicitud y muestra el resultado (~30-90 segundos)
 | `.github/workflows/consultar.yml` | Workflow que corre `worker_ci.py` en la nube de GitHub |
 | `requirements.txt` | Dependencias Python |
 
+Repositorio: https://github.com/freddyerazo/AgrocalidadDartis
+
 ## Puesta en marcha (una sola vez)
 
-### 1. Crear el repositorio
+### 1. Repositorio
 
-Crea un repositorio **público** en GitHub (público para poder usar GitHub Pages
-gratis). Sube todos los archivos de esta carpeta **excepto** `.env` (ya está en
-`.gitignore`, nunca debe subirse).
+Ya está creado y con el código subido: https://github.com/freddyerazo/AgrocalidadDartis
 
 ### 2. Activar GitHub Pages
 
 `Settings → Pages → Source: Deploy from a branch → Branch: main / (root)`
 
-Tu sitio quedará en `https://<tu-usuario>.github.io/<tu-repo>/`
+Tu sitio quedará en https://freddyerazo.github.io/AgrocalidadDartis/
 
 ### 3. Secrets del repositorio (para GitHub Actions)
 
@@ -63,7 +63,7 @@ Tu sitio quedará en `https://<tu-usuario>.github.io/<tu-repo>/`
 ### 4. Token de GitHub para que Supabase dispare el workflow
 
 1. Ve a GitHub → tu foto de perfil → **Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token**
-2. Repository access: **Only select repositories** → elige este repositorio
+2. Repository access: **Only select repositories** → `freddyerazo/AgrocalidadDartis`
 3. Permissions → Repository permissions → **Actions: Read and write**
 4. Genera el token y cópialo (empieza con `github_pat_...`)
 
@@ -73,13 +73,13 @@ En el [dashboard de Supabase](https://supabase.com/dashboard/project/kgpzhwocygo
 agrega estos secrets de la función (o del proyecto, se comparten):
 
 - `GITHUB_TOKEN` = el token que generaste en el paso 4
-- `GITHUB_OWNER` = tu usuario u organización de GitHub
-- `GITHUB_REPO` = el nombre del repositorio
-- `GITHUB_REF` = `main` (o el nombre de tu rama principal, si es distinto)
+- `GITHUB_OWNER` = `freddyerazo`
+- `GITHUB_REPO` = `AgrocalidadDartis`
+- `GITHUB_REF` = `main`
 
 ### 6. Probar
 
-Abre tu sitio (`https://<tu-usuario>.github.io/<tu-repo>/`), elige un país y una
+Abre https://freddyerazo.github.io/AgrocalidadDartis/, elige un país y una
 especie, y haz clic en **Verificar en Agrocalidad**. En 30-90 segundos debería
 aparecer el resultado en la tabla.
 
