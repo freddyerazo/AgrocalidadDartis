@@ -5,6 +5,22 @@ Sitio público (GitHub Pages) donde cualquiera con el link elige un **país** y 
 los requisitos de comercio exterior en [guia.agrocalidad.gob.ec](https://guia.agrocalidad.gob.ec),
 guardando el resultado en Supabase para consultas futuras.
 
+## Estado actual — ✅ Operativo (verificado 2026-07-24)
+
+- **Sitio publicado:** https://freddyerazo.github.io/AgrocalidadDartis/
+- **Repositorio:** https://github.com/freddyerazo/AgrocalidadDartis
+- **Proyecto Supabase:** `logistica-dashboard` (`kgpzhwocygonppblgmpm`)
+- Flujo probado de punta a punta con el sitio real publicado (país: Perú,
+  especie: LAVANDA): la solicitud se creó, el workflow de GitHub Actions
+  corrió, Playwright consultó el sitio real de Agrocalidad, y el resultado
+  quedó guardado y visible en la tabla — tiempo total ≈ 50 segundos.
+- Catálogo cargado en Supabase: **55 especies** activas, **255 países**
+  (catálogo completo real de Agrocalidad, con `name_es` = nombre exacto tal
+  como aparece en el sitio), **5 verificaciones** guardadas hasta el momento.
+- Los 5 pasos de configuración de la sección "Puesta en marcha" ya están
+  completados en este repositorio/proyecto — quedan documentados aquí por si
+  hay que rehacerlos (ej. rotar el token de GitHub, o replicar en otro repo).
+
 ## Cómo funciona
 
 El sitio de Agrocalidad bloquea cualquier consulta automatizada que no venga de
@@ -38,20 +54,34 @@ index.html sondea la solicitud y muestra el resultado (~30-90 segundos)
 | `consultar_agrocalidad.py` | Herramienta de línea de comandos para consultas manuales/masivas |
 | `.github/workflows/consultar.yml` | Workflow que corre `worker_ci.py` en la nube de GitHub |
 | `requirements.txt` | Dependencias Python |
+| `.env` (no versionado) | `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` para uso local de `consultar_agrocalidad.py` |
 
-Repositorio: https://github.com/freddyerazo/AgrocalidadDartis
+No forman parte de este sistema (quedan solo como referencia local, no se subieron
+al repositorio): `agrocalidad_consulta.html` y `actualizar_agrocalidad.py` —
+intentos previos que no funcionaban por el bloqueo anti-bot del sitio.
 
-## Puesta en marcha (una sola vez)
+## Esquema en Supabase (proyecto `logistica-dashboard`)
+
+- `public.species` — catálogo de especies de Bellaflor (ya existía, 55 filas activas)
+- `public.countries` — catálogo de países; se agregó la columna `name_es` con el
+  nombre exacto de Agrocalidad (255 países, conciliados con los que ya existían
+  en inglés para no duplicar — ej. `US`/"United States" tiene `name_es`="Estados Unidos")
+- `public.agrocalidad_requirements` — resultados verificados (especie + país +
+  tipo + área → requisitos), con `UNIQUE(species_id, country_id, trade_type, area_code)`
+- `public.agrocalidad_requests` — cola de solicitudes desde el sitio público
+  (`pending` → `processing` → `done`/`error`), con RLS: el público solo puede
+  `SELECT` e `INSERT` (nunca `UPDATE`/`DELETE`)
+
+## Puesta en marcha (referencia — ya completado en este proyecto)
 
 ### 1. Repositorio
 
-Ya está creado y con el código subido: https://github.com/freddyerazo/AgrocalidadDartis
+https://github.com/freddyerazo/AgrocalidadDartis
 
-### 2. Activar GitHub Pages
+### 2. GitHub Pages
 
 `Settings → Pages → Source: Deploy from a branch → Branch: main / (root)`
-
-Tu sitio quedará en https://freddyerazo.github.io/AgrocalidadDartis/
+→ https://freddyerazo.github.io/AgrocalidadDartis/
 
 ### 3. Secrets del repositorio (para GitHub Actions)
 
@@ -62,27 +92,45 @@ Tu sitio quedará en https://freddyerazo.github.io/AgrocalidadDartis/
 
 ### 4. Token de GitHub para que Supabase dispare el workflow
 
-1. Ve a GitHub → tu foto de perfil → **Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token**
+1. GitHub → foto de perfil → **Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token**
 2. Repository access: **Only select repositories** → `freddyerazo/AgrocalidadDartis`
 3. Permissions → Repository permissions → **Actions: Read and write**
-4. Genera el token y cópialo (empieza con `github_pat_...`)
+4. Generar y copiar el token (empieza con `github_pat_...`)
 
-### 5. Configurar la Edge Function en Supabase
+### 5. Secrets de la Edge Function en Supabase
 
-En el [dashboard de Supabase](https://supabase.com/dashboard/project/kgpzhwocygonppblgmpm/functions/trigger-agrocalidad-check/secrets),
-agrega estos secrets de la función (o del proyecto, se comparten):
+Dashboard del proyecto → **Edge Functions** → `trigger-agrocalidad-check` → **Secrets**
+(o **Project Settings → Edge Functions** si se comparten a nivel de proyecto):
 
-- `GITHUB_TOKEN` = el token que generaste en el paso 4
+- `GITHUB_TOKEN` = el token del paso 4
 - `GITHUB_OWNER` = `freddyerazo`
 - `GITHUB_REPO` = `AgrocalidadDartis`
 - `GITHUB_REF` = `main`
 
 ### 6. Probar
 
-Abre https://freddyerazo.github.io/AgrocalidadDartis/, elige un país y una
-especie, y haz clic en **Verificar en Agrocalidad**. En 30-90 segundos debería
-aparecer el resultado en la tabla.
+Abrir el sitio, elegir país + especie, clic en **Verificar en Agrocalidad**.
+Resultado esperado en 30-90 segundos.
 
-Si algo falla, revisa:
-- La pestaña **Actions** del repositorio (ahí se ve si el workflow corrió y por qué falló)
-- Los logs de la Edge Function en el dashboard de Supabase (Edge Functions → Logs)
+Si algo falla, revisar:
+- Pestaña **Actions** del repositorio (ahí se ve si el workflow corrió y por qué falló)
+- Logs de la Edge Function en el dashboard de Supabase (Edge Functions → Logs)
+- Tabla `agrocalidad_requests` en Supabase — columna `error_message` tiene el detalle
+
+## Limitaciones conocidas
+
+- Algunas especies del catálogo de Bellaflor están en inglés (ej. `CARNATION`)
+  mientras que el catálogo de Agrocalidad puede tener el nombre en español o
+  científico (ej. "Clavel" / *Dianthus*) — en esos casos la búsqueda puede dar
+  `NO_ENCONTRADO` aunque el producto sí exista en Agrocalidad con otro nombre.
+  No se resolvió en esta iteración; si se vuelve un problema frecuente, se puede
+  agregar una tabla de sinónimos o buscar por nombre científico también.
+- El tiempo de respuesta (30-90 s, a veces más) es inherente a tener que abrir
+  un navegador real cada vez — no hay forma de acelerarlo sin cambiar de
+  arquitectura (ver sección "Cómo funciona").
+
+## Próximos pasos posibles (no implementados)
+
+- Consultar más de un país/especie a la vez desde el sitio (hoy es de a uno)
+- Exportar la tabla de resultados a CSV/Excel desde el propio sitio
+- Sinónimos de especies (inglés/español/científico) para reducir `NO_ENCONTRADO`
