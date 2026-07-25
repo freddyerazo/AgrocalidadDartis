@@ -52,6 +52,22 @@ from agrocalidad_core import AREAS_VALIDAS, CHROME_UA, URL, consultar_producto, 
 load_dotenv(Path(__file__).with_name(".env"))
 
 
+def resolver_terminos_busqueda(productos: list[str], client) -> dict[str, str]:
+    """Mapea nombre Bellaflor -> término real a buscar en Agrocalidad, usando
+    species.name_agrocalidad cuando está definido (nombres que no coinciden
+    directamente entre el catálogo de Bellaflor y el de Agrocalidad, ej.
+    inglés/español). Si no hay cliente de Supabase o la especie no tiene
+    name_agrocalidad, se busca con el nombre tal cual."""
+    terminos = {p: p for p in productos}
+    if not client:
+        return terminos
+    r = client.table("species").select("name,name_agrocalidad").in_("name", productos).execute()
+    for row in r.data:
+        if row.get("name_agrocalidad"):
+            terminos[row["name"]] = row["name_agrocalidad"]
+    return terminos
+
+
 def leer_productos(args) -> list[str]:
     if args.archivo:
         return [l.strip() for l in Path(args.archivo).read_text(encoding="utf-8").splitlines() if l.strip()]
@@ -97,7 +113,12 @@ def normalizar_code(nombre: str) -> str:
 
 
 def upsert_referencia(client, tabla: str, nombre: str) -> str:
-    """Busca la fila por 'code' normalizado en species; la crea si no existe. Devuelve el id."""
+    """Busca la fila por 'name' exacto; si no existe, por 'code' normalizado; si tampoco, la crea.
+    Buscar primero por name evita duplicados cuando el code ya guardado no coincide con el que
+    generaría normalizar_code() para ese mismo nombre (ej. nombres con espacios)."""
+    existente = client.table(tabla).select("id").eq("name", nombre).execute()
+    if existente.data:
+        return existente.data[0]["id"]
     code = normalizar_code(nombre)
     existente = client.table(tabla).select("id").eq("code", code).execute()
     if existente.data:
@@ -166,6 +187,8 @@ def main():
         ap.error("Debes indicar --productos o --archivo")
 
     productos = leer_productos(args)
+    client = get_supabase_client()
+    terminos = resolver_terminos_busqueda(productos, client)
     print("=" * 64)
     print(f"  CONSULTA AGROCALIDAD — {args.pais}")
     print(f"  Tipo: {args.tipo} | Área: {args.area} | Productos: {len(productos)}")
@@ -186,7 +209,8 @@ def main():
         for i, producto in enumerate(productos, 1):
             print(f"[{i:02d}/{len(productos)}] {producto:<35}", end="", flush=True)
             try:
-                r = consultar_producto(page, producto, args.tipo, args.area, pais_id, args.pais)
+                r = consultar_producto(page, terminos[producto], args.tipo, args.area, pais_id, args.pais)
+                r["producto_buscado"] = producto
             except Exception as e:
                 r = {"producto_buscado": producto, "producto_encontrado": "", "nombre_cientifico": "",
                      "partida": "", "codigo_agrocalidad": "", "pais": args.pais, "tipo": args.tipo,
@@ -209,7 +233,6 @@ def main():
         print(f"  {estado}: {n}")
 
     if not args.sin_supabase:
-        client = get_supabase_client()
         if client:
             print()
             print("☁️  Sincronizando con Supabase...")

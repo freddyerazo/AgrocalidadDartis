@@ -16,7 +16,8 @@ guardando el resultado en Supabase para consultas futuras.
   quedó guardado y visible en la tabla — tiempo total ≈ 50 segundos.
 - Catálogo cargado en Supabase: **55 especies** activas, **255 países**
   (catálogo completo real de Agrocalidad, con `name_es` = nombre exacto tal
-  como aparece en el sitio), **5 verificaciones** guardadas hasta el momento.
+  como aparece en el sitio), **63 verificaciones** guardadas hasta el momento
+  (incluye una corrida masiva de las 55 especies contra Chile).
 - Los 5 pasos de configuración de la sección "Puesta en marcha" ya están
   completados en este repositorio/proyecto — quedan documentados aquí por si
   hay que rehacerlos (ej. rotar el token de GitHub, o replicar en otro repo).
@@ -62,7 +63,10 @@ intentos previos que no funcionaban por el bloqueo anti-bot del sitio.
 
 ## Esquema en Supabase (proyecto `logistica-dashboard`)
 
-- `public.species` — catálogo de especies de Bellaflor (ya existía, 55 filas activas)
+- `public.species` — catálogo de especies de Bellaflor (55 filas activas), con columna
+  `name_agrocalidad` (nombre exacto tal como aparece en el catálogo de Agrocalidad,
+  para especies cuyo nombre en Bellaflor no coincide directamente — ver
+  "Limitaciones conocidas")
 - `public.countries` — catálogo de países; se agregó la columna `name_es` con el
   nombre exacto de Agrocalidad (255 países, conciliados con los que ya existían
   en inglés para no duplicar — ej. `US`/"United States" tiene `name_es`="Estados Unidos")
@@ -120,11 +124,20 @@ Si algo falla, revisar:
 ## Limitaciones conocidas
 
 - Algunas especies del catálogo de Bellaflor están en inglés (ej. `CARNATION`)
-  mientras que el catálogo de Agrocalidad puede tener el nombre en español o
-  científico (ej. "Clavel" / *Dianthus*) — en esos casos la búsqueda puede dar
-  `NO_ENCONTRADO` aunque el producto sí exista en Agrocalidad con otro nombre.
-  No se resolvió en esta iteración; si se vuelve un problema frecuente, se puede
-  agregar una tabla de sinónimos o buscar por nombre científico también.
+  mientras que el catálogo de Agrocalidad tiene el nombre en español (ej.
+  "Clavel"). Se resuelve con la columna `species.name_agrocalidad`: si está
+  definida, `consultar_agrocalidad.py` y `worker_ci.py` la usan como término de
+  búsqueda en vez del nombre de Bellaflor (ver función `resolver_terminos_busqueda`
+  / lectura de `name_agrocalidad` en `worker_ci.py`). Todas las 55 especies del
+  catálogo fueron revisadas una por una (confirmado con Bellaflor) y quedaron
+  con `name_agrocalidad` definido, salvo dos sin equivalente en Agrocalidad:
+  `BOUQUETS` (producto compuesto, no una especie) y `SALVIA` (no existe en el
+  catálogo de Agrocalidad).
+  Nota: tener `name_agrocalidad` definido no garantiza `CON_REQUISITOS` para
+  todos los países — algunas especies (ej. `ARALIA`, `ASPARAGUS`, `COPROSMA`,
+  `ECHINACEA`, `HEBE`, `MARIGOLD`, `OXYPETALUM`, `PITTOSPORUM VARIEGATA`,
+  `SCHEFFLERA`) existen en Agrocalidad pero sin datos registrados para Chile
+  específicamente, aunque sí los tengan para otros países (ej. Estados Unidos).
 - El tiempo de respuesta (30-90 s, a veces más) es inherente a tener que abrir
   un navegador real cada vez — no hay forma de acelerarlo sin cambiar de
   arquitectura (ver sección "Cómo funciona").

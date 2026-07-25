@@ -36,7 +36,7 @@ def main():
 
     solicitud = (
         client.table("agrocalidad_requests")
-        .select("id, trade_type, area_code, species:species_id(id, name), country:country_id(id, name_es)")
+        .select("id, trade_type, area_code, species:species_id(id, name, name_agrocalidad), country:country_id(id, name_es)")
         .eq("id", request_id)
         .single()
         .execute()
@@ -47,6 +47,7 @@ def main():
         sys.exit(1)
 
     especie = solicitud["species"]["name"]
+    especie_busqueda = solicitud["species"]["name_agrocalidad"] or especie
     pais = solicitud["country"]["name_es"]
     tipo = solicitud["trade_type"]
     area = solicitud["area_code"]
@@ -60,7 +61,7 @@ def main():
             page = browser.new_page(user_agent=CHROME_UA)
             page.goto(URL, wait_until="networkidle", timeout=30000)
             pais_id = obtener_id_pais(page, pais)
-            resultado = consultar_producto(page, especie, tipo, area, pais_id, pais)
+            resultado = consultar_producto(page, especie_busqueda, tipo, area, pais_id, pais)
             browser.close()
 
         if resultado["estado"] == "ERROR":
