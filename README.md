@@ -5,7 +5,7 @@ Sitio público (GitHub Pages) donde cualquiera con el link elige un **país** y 
 los requisitos de comercio exterior en [guia.agrocalidad.gob.ec](https://guia.agrocalidad.gob.ec),
 guardando el resultado en Supabase para consultas futuras.
 
-## Estado actual — ✅ Operativo (verificado 2026-07-24)
+## Estado actual — ✅ Operativo (verificado 2026-07-25)
 
 - **Sitio publicado:** https://freddyerazo.github.io/AgrocalidadDartis/
 - **Repositorio:** https://github.com/freddyerazo/AgrocalidadDartis
@@ -17,7 +17,11 @@ guardando el resultado en Supabase para consultas futuras.
 - Catálogo cargado en Supabase: **55 especies** activas, **255 países**
   (catálogo completo real de Agrocalidad, con `name_es` = nombre exacto tal
   como aparece en el sitio), **63 verificaciones** guardadas hasta el momento
-  (incluye una corrida masiva de las 55 especies contra Chile).
+  (incluye una corrida masiva de las 55 especies contra Chile: **44 con
+  requisitos**, 11 sin coincidencia — ver "Limitaciones conocidas").
+- Las 55 especies de Bellaflor fueron revisadas una por una contra el catálogo
+  real de Agrocalidad; 27 tienen `name_agrocalidad` definido (nombre distinto
+  al de Bellaflor) y las otras 28 no lo necesitan (el nombre ya coincide tal cual).
 - Los 5 pasos de configuración de la sección "Puesta en marcha" ya están
   completados en este repositorio/proyecto — quedan documentados aquí por si
   hay que rehacerlos (ej. rotar el token de GitHub, o replicar en otro repo).
@@ -142,8 +146,33 @@ Si algo falla, revisar:
   un navegador real cada vez — no hay forma de acelerarlo sin cambiar de
   arquitectura (ver sección "Cómo funciona").
 
+## Cómo completar un mapeo de especie faltante
+
+Si una consulta nueva da `NO_ENCONTRADO` para una especie que sí debería existir
+en Agrocalidad (con otro país, por ejemplo):
+
+1. Buscar el nombre en [guia.agrocalidad.gob.ec](https://guia.agrocalidad.gob.ec/agrodb/aplicaciones/publico/productos1/consultaRequisitoComercio.php)
+   probando variantes en español/nombre científico. El buscador matchea por
+   substring, así que prefijos cortos (3-5 letras) suelen bastar para encontrar
+   el nombre exacto aunque no se sepa la ortografía completa (ej. "MOLU" encontró
+   "Molucella", que en el catálogo de Agrocalidad está mal escrito con una sola C).
+2. Confirmar con Bellaflor que el producto encontrado corresponde a la especie
+   del catálogo (evitar adivinar en casos ambiguos, ej. cuando hay varias
+   variantes como "Clavel" / "Clavel barbatus" / "miniclavel").
+3. Guardar el nombre exacto en Supabase: `UPDATE public.species SET
+   name_agrocalidad = '<nombre en Agrocalidad>' WHERE name = '<nombre Bellaflor>';`
+4. Volver a correr `consultar_agrocalidad.py --pais "<país>" --productos
+   <ESPECIE>` para confirmar que ahora sí encuentra resultado.
+
+Nota: que el nombre matchee no garantiza `CON_REQUISITOS` para todos los
+países — Agrocalidad puede no tener datos registrados para un país puntual
+aunque el producto exista en su catálogo (ver "Limitaciones conocidas").
+
 ## Próximos pasos posibles (no implementados)
 
 - Consultar más de un país/especie a la vez desde el sitio (hoy es de a uno)
 - Exportar la tabla de resultados a CSV/Excel desde el propio sitio
-- Sinónimos de especies (inglés/español/científico) para reducir `NO_ENCONTRADO`
+- Repetir la corrida masiva (`consultar_agrocalidad.py --archivo`) para otros
+  países además de Chile, y completar `name_agrocalidad` para las especies que
+  aún no lo tienen (`BOUQUETS`, `SALVIA` no tienen equivalente; el resto puede
+  tener datos para países distintos a Chile)
