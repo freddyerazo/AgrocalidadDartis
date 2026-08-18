@@ -6,6 +6,7 @@
 <title>Requisitos Agrocalidad — Bellaflor</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;1,300&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
 <style>
   :root {
     --verde-oscuro: #0e2d1a;
@@ -13,63 +14,259 @@
     --verde-vivo: #2d8a52;
     --verde-claro: #4ebb7f;
     --verde-suave: #a8e6bf;
-    --crema: #f4efe6;
-    --crema-oscuro: #e8dfc9;
     --rojo: #c0392b;
-    --amarillo: #e67e22;
     --gris: #8a8a8a;
-    --texto: #1a1a1a;
-    --sombra: rgba(14,45,26,0.15);
+    --texto: #111111;
+    --borde: #e8e8e8;
+    --borde-fuerte: #d0d0d0;
+    --fondo-form: #f9fafb;
   }
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: var(--crema); font-family: 'DM Sans', sans-serif; color: var(--texto); min-height: 100vh; }
+  body { background: #ffffff; font-family: 'DM Sans', sans-serif; color: var(--texto); min-height: 100vh; display: flex; flex-direction: column; }
 
-  header { background: var(--verde-oscuro); }
-  .header-inner { display: flex; align-items: center; gap: 16px; padding: 22px 32px; border-bottom: 1px solid rgba(168,230,191,0.12); }
-  .logo-badge { width: 46px; height: 46px; background: linear-gradient(135deg, var(--verde-vivo), var(--verde-claro)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
-  .header-text h1 { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 600; color: var(--verde-suave); }
-  .header-text p { font-size: 11px; color: rgba(168,230,191,0.55); letter-spacing: 1.2px; text-transform: uppercase; margin-top: 2px; font-family: 'DM Mono', monospace; }
+  /* ── Header ── */
+  header { background: #ffffff; border-bottom: 1px solid var(--borde); }
+  .header-inner {
+    max-width: 1280px; margin: 0 auto;
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 32px;
+  }
+  .logo-badge {
+    width: 40px; height: 40px;
+    border: 2px solid var(--verde-vivo);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+    opacity: 0;
+  }
+  .header-text h1 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px; font-weight: 600; color: var(--texto);
+    opacity: 0;
+  }
+  .header-text p {
+    font-size: 11px; color: var(--gris);
+    letter-spacing: 0.5px; margin-top: 1px;
+    opacity: 0;
+  }
+  .header-pill {
+    margin-left: auto;
+    background: #e8f5ee; color: #1a7a44;
+    font-size: 11px; font-weight: 500;
+    padding: 4px 12px; border-radius: 20px;
+    font-family: 'DM Mono', monospace;
+    opacity: 0;
+    transform: translateX(12px);
+  }
 
-  .main { max-width: 1100px; margin: 0 auto; padding: 32px 24px 80px; display: grid; grid-template-columns: 320px 1fr; gap: 24px; align-items: start; }
-  @media (max-width: 800px) { .main { grid-template-columns: 1fr; } }
+  /* ── Layout split ── */
+  .main {
+    flex: 1;
+    max-width: 1280px; margin: 0 auto; width: 100%;
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    min-height: calc(100vh - 73px);
+  }
+  @media (max-width: 860px) { .main { grid-template-columns: 1fr; } }
 
-  .card { background: #fff; border-radius: 16px; box-shadow: 0 2px 12px var(--sombra), 0 0 0 1px rgba(14,45,26,0.06); overflow: hidden; margin-bottom: 16px; }
-  .card-header { background: var(--verde-medio); padding: 12px 18px; }
-  .card-header h2 { font-family: 'Fraunces', serif; font-size: 14px; font-weight: 600; color: var(--verde-suave); }
-  .card-body { padding: 18px; }
+  /* ── Panel izquierdo (formulario) ── */
+  .panel-form {
+    background: var(--fondo-form);
+    border-right: 1px solid var(--borde);
+    padding: 28px 24px;
+  }
+  .panel-section-title {
+    font-size: 11px; font-weight: 600;
+    color: var(--verde-vivo);
+    text-transform: uppercase; letter-spacing: 1.1px;
+    margin-bottom: 20px;
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'DM Mono', monospace;
+    opacity: 0;
+  }
+  .panel-section-title::after {
+    content: ''; flex: 1;
+    height: 1px; background: var(--borde);
+  }
 
-  label.field-label { display: block; font-size: 10px; font-weight: 500; color: var(--verde-vivo); text-transform: uppercase; letter-spacing: 1.1px; margin-bottom: 6px; font-family: 'DM Mono', monospace; }
-  select { width: 100%; padding: 9px 12px; border: 1.5px solid var(--crema-oscuro); border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--texto); background: var(--crema); margin-bottom: 14px; }
+  .field-group { margin-bottom: 14px; opacity: 0; transform: translateY(10px); }
+  label.field-label {
+    display: block; font-size: 11px; font-weight: 500;
+    color: #555; margin-bottom: 5px;
+  }
+  select {
+    width: 100%; padding: 9px 12px;
+    border: 1.5px solid var(--borde);
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; color: var(--texto);
+    background: #ffffff;
+    transition: border-color 0.2s;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
   select:focus { outline: none; border-color: var(--verde-vivo); }
 
-  button.btn-principal { width: 100%; padding: 12px; border: none; border-radius: 10px; background: var(--verde-vivo); color: #fff; font-weight: 500; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  button.btn-principal {
+    width: 100%; padding: 11px;
+    border: none; border-radius: 9px;
+    background: var(--verde-vivo); color: #fff;
+    font-weight: 500; font-size: 14px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 6px;
+    transition: background 0.15s;
+    opacity: 0;
+    transform: translateY(10px);
+    position: relative;
+    overflow: hidden;
+  }
   button.btn-principal:hover { background: var(--verde-medio); }
   button.btn-principal:disabled { background: var(--gris); cursor: not-allowed; }
 
-  .estado-box { font-size: 12.5px; padding: 10px 12px; border-radius: 8px; margin-top: 12px; display: none; }
-  .estado-box.visible { display: block; }
-  .estado-box.info { background: #eef7f0; color: var(--verde-medio); }
-  .estado-box.error { background: #fbeceb; color: var(--rojo); }
+  button.btn-secundario {
+    width: 100%; padding: 10px;
+    border: 1.5px solid var(--verde-vivo); border-radius: 9px;
+    background: transparent; color: var(--verde-vivo);
+    font-weight: 500; font-size: 13px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 8px;
+    transition: background 0.15s, color 0.15s;
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  button.btn-secundario:hover { background: #eef7f0; }
+  button.btn-secundario:disabled { border-color: var(--gris); color: var(--gris); cursor: not-allowed; background: transparent; }
 
-  .spinner { width: 13px; height: 13px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: girar 0.7s linear infinite; display: inline-block; }
+  .progreso-box {
+    margin-top: 14px; padding: 12px 13px;
+    border-radius: 8px; border: 1px solid #c3e8d0; background: #eef7f0;
+    display: none;
+  }
+  .progreso-box.visible { display: block; }
+  .progreso-header {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    font-size: 12px; color: var(--verde-medio); margin-bottom: 8px;
+  }
+  #progresoTexto { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .btn-cancelar {
+    border: none; background: none; color: var(--rojo);
+    font-size: 11px; font-family: 'DM Mono', monospace; cursor: pointer;
+    padding: 2px 6px; flex-shrink: 0;
+  }
+  .btn-cancelar:hover { text-decoration: underline; }
+  .progreso-track { height: 5px; border-radius: 3px; background: #d5ecdd; overflow: hidden; }
+  .progreso-fill { height: 100%; background: var(--verde-vivo); width: 0%; transition: width 0.3s ease; }
+
+  /* ripple en el botón */
+  .btn-ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    transform: scale(0);
+    pointer-events: none;
+    width: 120px; height: 120px;
+    margin-left: -60px; margin-top: -60px;
+  }
+
+  /* pulso mientras espera */
+  @keyframes pulso-btn {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.82; }
+  }
+  .btn-esperando { animation: pulso-btn 1.4s ease-in-out infinite; }
+
+  .estado-box {
+    font-size: 12.5px; padding: 10px 12px;
+    border-radius: 8px; margin-top: 14px; display: none;
+    line-height: 1.5; opacity: 0;
+  }
+  .estado-box.visible { display: block; }
+  .estado-box.info { background: #eef7f0; color: var(--verde-medio); border: 1px solid #c3e8d0; }
+  .estado-box.error { background: #fdf0ef; color: var(--rojo); border: 1px solid #f5c5c0; }
+
+  .spinner {
+    width: 13px; height: 13px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: girar 0.7s linear infinite;
+    display: inline-block;
+  }
   @keyframes girar { to { transform: rotate(360deg); } }
 
-  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; font-family: 'DM Mono', monospace; white-space: nowrap; }
-  .badge-ok { background: #e3f6ea; color: #1e7a44; }
-  .badge-sin { background: #f0f0f0; color: #666; }
-  .badge-no { background: #fdecea; color: var(--rojo); }
+  /* ── Panel derecho (resultados) ── */
+  .panel-resultados { padding: 28px 28px; }
+
+  .resultados-header {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 18px;
+    opacity: 0;
+  }
+  .dot-vivo {
+    width: 8px; height: 8px;
+    border-radius: 50%; background: var(--verde-claro);
+    flex-shrink: 0;
+  }
+  .resultados-header h2 {
+    font-size: 11px; font-weight: 600;
+    color: var(--verde-vivo);
+    text-transform: uppercase; letter-spacing: 1.1px;
+    font-family: 'DM Mono', monospace;
+  }
+  .filtro-input {
+    width: 100%; padding: 9px 12px;
+    border: 1.5px solid var(--borde);
+    border-radius: 8px; font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    background: #fff; color: var(--texto);
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+    opacity: 0;
+  }
+  .filtro-input:focus { outline: none; border-color: var(--verde-vivo); }
+
+  /* Tabla */
+  .tabla-wrap {
+    overflow: auto; max-height: calc(100vh - 200px);
+    border-radius: 10px; border: 1px solid var(--borde);
+    opacity: 0;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th {
+    text-align: left; padding: 10px 14px;
+    background: #f5f5f5;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.8px; color: #666;
+    position: sticky; top: 0;
+    border-bottom: 1px solid var(--borde);
+  }
+  tbody td { padding: 11px 14px; border-bottom: 1px solid var(--borde); vertical-align: top; color: #222; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: #fafafa; }
+  .td-requisitos { max-width: 380px; color: #555; font-size: 12px; line-height: 1.5; white-space: pre-line; }
+  .celda-vacia { text-align: center; color: #aaa; padding: 40px; font-size: 13px; }
+
+  /* Badges */
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 500;
+    font-family: 'DM Mono', monospace; white-space: nowrap;
+  }
+  .badge-ok  { background: #e3f6ea; color: #1e7a44; }
+  .badge-sin { background: #f5f5f5; color: #777; }
+  .badge-no  { background: #fdecea; color: var(--rojo); }
   .badge-err { background: #fdecea; color: var(--rojo); }
 
-  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-  thead th { text-align: left; padding: 10px 12px; background: var(--crema-oscuro); font-family: 'DM Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--verde-medio); position: sticky; top: 0; }
-  tbody td { padding: 10px 12px; border-bottom: 1px solid var(--crema-oscuro); vertical-align: top; }
-  tbody tr:hover { background: #fafaf6; }
-  .td-requisitos { max-width: 420px; color: #444; font-size: 12px; line-height: 1.5; white-space: pre-line; }
-  .celda-vacia { text-align: center; color: #999; padding: 30px; font-size: 13px; }
-
-  .filtro-input { width: 100%; padding: 8px 12px; border: 1.5px solid var(--crema-oscuro); border-radius: 8px; font-size: 13px; margin-bottom: 12px; font-family: 'DM Sans', sans-serif; }
-
-  .resultado-nuevo { border: 2px solid var(--verde-vivo); }
+  .resultado-nuevo { background: #f0faf4 !important; }
+  .resultado-nuevo td { border-left: 3px solid var(--verde-vivo); }
 </style>
 </head>
 <body>
@@ -81,69 +278,95 @@
       <h1>Requisitos Agrocalidad</h1>
       <p>Bellaflor · Consulta de comercio exterior</p>
     </div>
+    <span class="header-pill">Sanidad Vegetal</span>
   </div>
 </header>
 
 <div class="main">
+
+  <!-- Formulario -->
   <div class="panel-form">
-    <div class="card">
-      <div class="card-header"><h2>Nueva verificación</h2></div>
-      <div class="card-body">
-        <label class="field-label">País destino</label>
-        <select id="selectPais"><option value="">Cargando países…</option></select>
+    <div class="panel-section-title">Nueva verificación</div>
 
-        <label class="field-label">Especie</label>
-        <select id="selectEspecie"><option value="">Cargando especies…</option></select>
+    <div class="field-group">
+      <label class="field-label">País destino</label>
+      <select id="selectPais"><option value="">Cargando países…</option></select>
+    </div>
 
-        <label class="field-label">Tipo de movimiento</label>
+    <div class="field-group">
+      <label class="field-label">Especie</label>
+      <select id="selectEspecie"><option value="">Cargando especies…</option></select>
+    </div>
+
+    <div class="row-2">
+      <div class="field-group">
+        <label class="field-label">Movimiento</label>
         <select id="selectTipo">
           <option value="Exportación" selected>Exportación</option>
           <option value="Importación">Importación</option>
           <option value="Tránsito">Tránsito</option>
           <option value="Nacional">Nacional</option>
         </select>
-
+      </div>
+      <div class="field-group">
         <label class="field-label">Área</label>
         <select id="selectArea">
           <option value="SV" selected>Sanidad Vegetal</option>
           <option value="SA">Sanidad Animal</option>
-          <option value="IAP">Productos agrícolas</option>
-          <option value="IAV">Productos pecuarios</option>
-          <option value="IAF">Productos fertilizantes</option>
+          <option value="IAP">Prod. agrícolas</option>
+          <option value="IAV">Prod. pecuarios</option>
+          <option value="IAF">Fertilizantes</option>
         </select>
-
-        <button class="btn-principal" id="btnVerificar" onclick="verificar()">
-          <span id="btnIcon">🔍</span> <span id="btnTexto">Verificar en Agrocalidad</span>
-        </button>
-
-        <div class="estado-box" id="estadoBox"></div>
       </div>
+    </div>
+
+    <button class="btn-principal" id="btnVerificar" onclick="verificar()">
+      <span id="btnIcon">🔍</span>
+      <span id="btnTexto">Verificar en Agrocalidad</span>
+    </button>
+
+    <div class="estado-box" id="estadoBox"></div>
+
+    <button class="btn-secundario" id="btnVerificarTodas" onclick="verificarTodas()">
+      <span>📋</span>
+      <span>Verificar catálogo completo para este país</span>
+    </button>
+
+    <div class="progreso-box" id="progresoBox">
+      <div class="progreso-header">
+        <span id="progresoTexto">Verificando 0/0</span>
+        <button class="btn-cancelar" onclick="cancelarVerificacionTodas()">Cancelar</button>
+      </div>
+      <div class="progreso-track"><div class="progreso-fill" id="progresoFill"></div></div>
     </div>
   </div>
 
+  <!-- Resultados -->
   <div class="panel-resultados">
-    <div class="card">
-      <div class="card-header"><h2>Requisitos ya verificados</h2></div>
-      <div class="card-body">
-        <input class="filtro-input" id="filtroTexto" placeholder="Filtrar por país o especie…" oninput="renderTabla()">
-        <div style="max-height: 560px; overflow: auto;">
-          <table>
-            <thead>
-              <tr>
-                <th>Especie</th>
-                <th>País</th>
-                <th>Estado</th>
-                <th>Detalle</th>
-              </tr>
-            </thead>
-            <tbody id="tbodyResultados">
-              <tr><td colspan="4" class="celda-vacia">Cargando…</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+    <div class="resultados-header">
+      <div class="dot-vivo"></div>
+      <h2>Requisitos ya verificados</h2>
+    </div>
+
+    <input class="filtro-input" id="filtroTexto" placeholder="Filtrar por país o especie…" oninput="renderTabla()">
+
+    <div class="tabla-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Especie</th>
+            <th>País</th>
+            <th>Estado</th>
+            <th>Detalle</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyResultados">
+          <tr><td colspan="4" class="celda-vacia">Cargando…</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
+
 </div>
 
 <script>
@@ -155,13 +378,16 @@ const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/trigger-agrocalidad-chec
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let resultados = [];
+let especiesCatalogo = [];
 let verificando = false;
+let verificandoTodas = false;
+let cancelarTodas = false;
 
 const ESTADO_INFO = {
   CON_REQUISITOS:            { badge: "badge-ok",  label: "✅ Con requisitos" },
   SIN_REQUISITOS_REGISTRADOS:{ badge: "badge-sin", label: "➖ Sin requisitos registrados" },
   NO_ENCONTRADO:              { badge: "badge-no",  label: "❓ No encontrado" },
-  ERROR:                       { badge: "badge-err", label: "⚠ Error" },
+  ERROR:                      { badge: "badge-err", label: "⚠ Error" },
 };
 
 function esc(s) {
@@ -169,7 +395,228 @@ function esc(s) {
   return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
 
-// ── Cargar listas de países y especies ──
+// ════════════════════════════════════════
+// ANIMACIONES — Anime.js
+// ════════════════════════════════════════
+
+// 1. Entrada del header (logo → título → subtítulo → pill)
+function animarHeader() {
+  anime.timeline({ easing: 'easeOutExpo' })
+    .add({
+      targets: '.logo-badge',
+      opacity: [0, 1],
+      scale: [0.75, 1],
+      duration: 500,
+    })
+    .add({
+      targets: '.header-text h1',
+      opacity: [0, 1],
+      translateY: [-6, 0],
+      duration: 400,
+    }, '-=200')
+    .add({
+      targets: '.header-text p',
+      opacity: [0, 1],
+      translateY: [-4, 0],
+      duration: 350,
+    }, '-=250')
+    .add({
+      targets: '.header-pill',
+      opacity: [0, 1],
+      translateX: [12, 0],
+      duration: 400,
+    }, '-=200');
+}
+
+// 2. Entrada del formulario en stagger
+function animarFormulario() {
+  anime({
+    targets: '.panel-section-title',
+    opacity: [0, 1],
+    translateY: [-6, 0],
+    duration: 400,
+    easing: 'easeOutExpo',
+    delay: 180,
+  });
+  anime({
+    targets: '.panel-form .field-group',
+    opacity: [0, 1],
+    translateY: [10, 0],
+    duration: 420,
+    easing: 'easeOutExpo',
+    delay: anime.stagger(55, { start: 260 }),
+  });
+  anime({
+    targets: '#btnVerificar',
+    opacity: [0, 1],
+    translateY: [10, 0],
+    duration: 420,
+    easing: 'easeOutExpo',
+    delay: 620,
+  });
+  anime({
+    targets: '#btnVerificarTodas',
+    opacity: [0, 1],
+    translateY: [10, 0],
+    duration: 420,
+    easing: 'easeOutExpo',
+    delay: 680,
+  });
+}
+
+// 3. Entrada del panel de resultados
+function animarPanelResultados() {
+  anime.timeline({ easing: 'easeOutExpo', delay: 300 })
+    .add({
+      targets: '.resultados-header',
+      opacity: [0, 1],
+      translateY: [-6, 0],
+      duration: 400,
+    })
+    .add({
+      targets: '.filtro-input',
+      opacity: [0, 1],
+      translateY: [6, 0],
+      duration: 380,
+    }, '-=200')
+    .add({
+      targets: '.tabla-wrap',
+      opacity: [0, 1],
+      translateY: [10, 0],
+      duration: 420,
+    }, '-=180');
+}
+
+// 4. Filas de tabla en stagger
+function animarFilas() {
+  const filas = document.querySelectorAll('#tbodyResultados tr');
+  if (!filas.length) return;
+  // estado inicial invisible
+  filas.forEach(f => { f.style.opacity = 0; f.style.transform = 'translateY(8px)'; });
+  anime({
+    targets: '#tbodyResultados tr',
+    opacity: [0, 1],
+    translateY: [8, 0],
+    duration: 340,
+    easing: 'easeOutExpo',
+    delay: anime.stagger(35),
+  });
+}
+
+// 5. Badge con spring al aparecer
+function animarBadges() {
+  anime({
+    targets: '#tbodyResultados .badge',
+    scale: [0.6, 1],
+    opacity: [0, 1],
+    duration: 500,
+    easing: 'spring(1, 80, 10, 0)',
+    delay: anime.stagger(30, { start: 80 }),
+  });
+}
+
+// 6. Flash verde en fila nueva
+function animarFilaNueva(idResaltar) {
+  if (!idResaltar) return;
+  const filas = document.querySelectorAll('#tbodyResultados tr.resultado-nuevo');
+  filas.forEach(fila => {
+    anime({
+      targets: fila,
+      backgroundColor: ['#b2f0cc', '#f0faf4'],
+      duration: 1600,
+      easing: 'easeOutExpo',
+    });
+  });
+}
+
+// 7. Ripple en botón al hacer clic
+function animarRippleBtn(e) {
+  const btn = document.getElementById('btnVerificar');
+  const ripple = document.createElement('span');
+  ripple.className = 'btn-ripple';
+  const rect = btn.getBoundingClientRect();
+  ripple.style.left = (e.clientX - rect.left) + 'px';
+  ripple.style.top = (e.clientY - rect.top) + 'px';
+  btn.appendChild(ripple);
+  anime({
+    targets: ripple,
+    scale: [0, 3.5],
+    opacity: [1, 0],
+    duration: 550,
+    easing: 'easeOutExpo',
+    complete: () => ripple.remove(),
+  });
+}
+
+// 8. Scale click en botón
+function animarClickBtn() {
+  anime({
+    targets: '#btnVerificar',
+    scale: [1, 0.97, 1],
+    duration: 300,
+    easing: 'easeOutBack',
+  });
+}
+
+// 9. Flash de éxito en botón al completar
+function animarExitoBtn() {
+  anime({
+    targets: '#btnVerificar',
+    backgroundColor: ['#4ebb7f', '#2d8a52'],
+    duration: 900,
+    easing: 'easeOutExpo',
+  });
+}
+
+// 10. Aparecer estado-box con fade
+function animarEstadoBox() {
+  const box = document.getElementById('estadoBox');
+  anime({
+    targets: box,
+    opacity: [0, 1],
+    translateY: [-4, 0],
+    duration: 300,
+    easing: 'easeOutExpo',
+  });
+}
+
+// ── Arrancar animaciones de entrada ──
+window.addEventListener('DOMContentLoaded', () => {
+  animarHeader();
+  animarFormulario();
+  animarPanelResultados();
+
+  // Ripple + scale en botón
+  const btn = document.getElementById('btnVerificar');
+  btn.addEventListener('click', (e) => {
+    animarRippleBtn(e);
+    animarClickBtn();
+  });
+});
+
+// ════════════════════════════════════════
+// SUPABASE — lógica original intacta
+// ════════════════════════════════════════
+
+function mostrarEstado(msg, tipo) {
+  const box = document.getElementById("estadoBox");
+  box.textContent = msg;
+  box.className = `estado-box visible ${tipo}`;
+  animarEstadoBox();
+}
+function ocultarEstado() {
+  const box = document.getElementById("estadoBox");
+  anime({
+    targets: box,
+    opacity: [1, 0],
+    duration: 200,
+    easing: 'easeInExpo',
+    complete: () => { box.className = "estado-box"; },
+  });
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
 async function cargarListas() {
   const [{ data: paises, error: errPaises }, { data: especies, error: errEspecies }] = await Promise.all([
     sb.from("countries").select("id, name_es").order("name_es"),
@@ -189,13 +636,14 @@ async function cargarListas() {
     paises.map(p => `<option value="${p.id}">${esc(p.name_es)}</option>`).join("");
   selEsp.innerHTML = '<option value="">Seleccione una especie…</option>' +
     especies.map(e => `<option value="${e.id}">${esc(e.name)}</option>`).join("");
+
+  especiesCatalogo = especies.map(e => ({ id: e.id, name: e.name }));
 }
 
-// ── Cargar tabla de resultados existentes ──
 async function cargarResultados() {
   const { data, error } = await sb
     .from("agrocalidad_requirements")
-    .select("id, status, matched_product_name, scientific_name, tariff_heading, requirements, queried_at, species:species_id(name), country:country_id(name_es)")
+    .select("id, species_id, country_id, trade_type, area_code, status, matched_product_name, scientific_name, tariff_heading, requirements, queried_at, species:species_id(name), country:country_id(name_es)")
     .order("queried_at", { ascending: false })
     .limit(500);
 
@@ -239,23 +687,51 @@ function renderTabla(idResaltar) {
         <td class="td-requisitos">${esc(detalle).substring(0, 500)}${detalle.length > 500 ? "…" : ""}</td>
       </tr>`;
   }).join("");
+
+  animarFilas();
+  animarBadges();
+  if (idResaltar) animarFilaNueva(idResaltar);
 }
 
-// ── Estado del formulario ──
-function mostrarEstado(msg, tipo) {
-  const box = document.getElementById("estadoBox");
-  box.textContent = msg;
-  box.className = `estado-box visible ${tipo}`;
-}
-function ocultarEstado() {
-  document.getElementById("estadoBox").className = "estado-box";
+// Dispara una solicitud puntual y devuelve su request_id.
+async function enviarSolicitud(speciesId, countryId, tradeType, areaCode) {
+  const resp = await fetch(EDGE_FUNCTION_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+      "apikey": SUPABASE_ANON_KEY,
+    },
+    body: JSON.stringify({ species_id: speciesId, country_id: countryId, trade_type: tradeType, area_code: areaCode }),
+  });
+  const data = await resp.json();
+  if (!resp.ok) throw new Error(data.error || `Error ${resp.status}`);
+  return data.request_id;
 }
 
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+// Sondea agrocalidad_requests hasta que termine (done/error) o se agote el tiempo.
+// onTick(segundosTranscurridos) permite reflejar el avance en la UI que llama a esta función.
+async function pollSolicitud(requestId, onTick) {
+  const maxIntentos = 40;
+  for (let i = 0; i < maxIntentos; i++) {
+    if (onTick) onTick(i * 4);
 
-// ── Disparar verificación ──
+    const { data: solicitud, error } = await sb
+      .from("agrocalidad_requests")
+      .select("status, requirement_id, error_message")
+      .eq("id", requestId)
+      .single();
+
+    if (error) return { status: "error", error_message: error.message };
+    if (solicitud.status === "done" || solicitud.status === "error") return solicitud;
+
+    await sleep(4000);
+  }
+  return { status: "timeout" };
+}
+
 async function verificar() {
-  if (verificando) return;
+  if (verificando || verificandoTodas) return;
 
   const speciesId = document.getElementById("selectEspecie").value;
   const countryId = document.getElementById("selectPais").value;
@@ -269,68 +745,140 @@ async function verificar() {
 
   verificando = true;
   const btn = document.getElementById("btnVerificar");
+  const btnTodas = document.getElementById("btnVerificarTodas");
   btn.disabled = true;
+  btnTodas.disabled = true;
+  btn.classList.add('btn-esperando');
   document.getElementById("btnIcon").innerHTML = '<span class="spinner"></span>';
   document.getElementById("btnTexto").textContent = "Enviando solicitud…";
   ocultarEstado();
 
   try {
-    const resp = await fetch(EDGE_FUNCTION_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-        "apikey": SUPABASE_ANON_KEY,
-      },
-      body: JSON.stringify({ species_id: speciesId, country_id: countryId, trade_type: tradeType, area_code: areaCode }),
+    const requestId = await enviarSolicitud(speciesId, countryId, tradeType, areaCode);
+    mostrarEstado("Tu solicitud fue enviada. Esto puede tardar entre 30 y 90 segundos mientras el navegador automatizado consulta el sitio real de Agrocalidad.", "info");
+
+    const solicitud = await pollSolicitud(requestId, (s) => {
+      document.getElementById("btnTexto").textContent = `Consultando en Agrocalidad… (${s}s)`;
     });
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data.error || `Error ${resp.status}`);
 
-    await esperarResultado(data.request_id);
-
+    if (solicitud.status === "done") {
+      await cargarResultados();
+      renderTabla(solicitud.requirement_id);
+      animarExitoBtn();
+      mostrarEstado("✅ Verificación completada. Resultado agregado a la tabla.", "info");
+    } else if (solicitud.status === "error") {
+      mostrarEstado(`⚠ Error en la verificación: ${solicitud.error_message || "desconocido"}`, "error");
+    } else {
+      mostrarEstado("La verificación está tardando más de lo esperado. Revisa la tabla en unos minutos.", "error");
+    }
   } catch (e) {
     mostrarEstado(`No se pudo completar la verificación: ${e.message}`, "error");
   } finally {
     verificando = false;
     btn.disabled = false;
+    btnTodas.disabled = false;
+    btn.classList.remove('btn-esperando');
     document.getElementById("btnIcon").textContent = "🔍";
     document.getElementById("btnTexto").textContent = "Verificar en Agrocalidad";
   }
 }
 
-// ── Sondear el estado de la solicitud hasta que termine ──
-async function esperarResultado(requestId) {
-  const maxIntentos = 40; // ~40 * 4s = 160s de espera máxima
-  for (let i = 0; i < maxIntentos; i++) {
-    document.getElementById("btnTexto").textContent = `Consultando en Agrocalidad… (${i * 4}s)`;
-    mostrarEstado("Tu solicitud fue enviada. Esto puede tardar entre 30 y 90 segundos mientras el navegador automatizado consulta el sitio real de Agrocalidad.", "info");
+// ── Verificación masiva: todo el catálogo activo contra un país ──
 
-    const { data: solicitud, error } = await sb
-      .from("agrocalidad_requests")
-      .select("status, requirement_id, error_message")
-      .eq("id", requestId)
-      .single();
+function claveResultado(speciesId, countryId, tradeType, areaCode) {
+  return `${speciesId}|${countryId}|${tradeType}|${areaCode}`;
+}
 
-    if (error) {
-      mostrarEstado(`Error consultando el estado: ${error.message}`, "error");
-      return;
-    }
+function mostrarProgreso(visible) {
+  document.getElementById("progresoBox").classList.toggle("visible", visible);
+}
 
-    if (solicitud.status === "done") {
-      await cargarResultados();
-      renderTabla(solicitud.requirement_id);
-      mostrarEstado("✅ Verificación completada. Resultado agregado a la tabla.", "info");
-      return;
-    }
-    if (solicitud.status === "error") {
-      mostrarEstado(`⚠ Error en la verificación: ${solicitud.error_message || "desconocido"}`, "error");
-      return;
-    }
+function actualizarProgreso(indice, total, detalle) {
+  document.getElementById("progresoTexto").textContent = `Verificando ${indice + 1}/${total}: ${detalle}`;
+  document.getElementById("progresoFill").style.width = `${Math.round((indice / total) * 100)}%`;
+}
 
-    await sleep(4000);
+function cancelarVerificacionTodas() {
+  cancelarTodas = true;
+  const texto = document.getElementById("progresoTexto");
+  if (!texto.textContent.includes("cancelando")) texto.textContent += " — cancelando…";
+}
+
+async function verificarTodas() {
+  if (verificando || verificandoTodas) return;
+
+  const countryId = document.getElementById("selectPais").value;
+  if (!countryId) {
+    mostrarEstado("Selecciona un país primero.", "error");
+    return;
   }
-  mostrarEstado("La verificación está tardando más de lo esperado. Revisa la tabla en unos minutos.", "error");
+  const tradeType = document.getElementById("selectTipo").value;
+  const areaCode = document.getElementById("selectArea").value;
+
+  const yaHechas = new Set(
+    resultados
+      .filter(r => String(r.country_id) === String(countryId) && r.trade_type === tradeType && r.area_code === areaCode)
+      .map(r => String(r.species_id))
+  );
+  const pendientes = especiesCatalogo.filter(e => !yaHechas.has(String(e.id)));
+
+  if (pendientes.length === 0) {
+    mostrarEstado("Ya existe un resultado guardado para todas las especies con este país, movimiento y área.", "info");
+    return;
+  }
+
+  const minutosEstimados = Math.max(1, Math.round(pendientes.length * 45 / 60));
+  const confirmar = confirm(
+    `Se van a verificar ${pendientes.length} especie(s) pendientes contra el país seleccionado ` +
+    `(las que ya tienen resultado guardado para este movimiento/área se omiten).\n\n` +
+    `Cada consulta abre un navegador real contra el sitio de Agrocalidad y tarda 30-90 segundos, ` +
+    `así que el proceso completo puede tomar aproximadamente ${minutosEstimados} minuto(s) y debe correr con esta página abierta. ¿Continuar?`
+  );
+  if (!confirmar) return;
+
+  verificandoTodas = true;
+  cancelarTodas = false;
+  document.getElementById("btnVerificar").disabled = true;
+  const btnTodas = document.getElementById("btnVerificarTodas");
+  btnTodas.disabled = true;
+  mostrarProgreso(true);
+  ocultarEstado();
+
+  let ok = 0, fallidas = 0;
+
+  for (let i = 0; i < pendientes.length; i++) {
+    if (cancelarTodas) break;
+    const especie = pendientes[i];
+    actualizarProgreso(i, pendientes.length, especie.name);
+
+    try {
+      const requestId = await enviarSolicitud(especie.id, countryId, tradeType, areaCode);
+      const solicitud = await pollSolicitud(requestId, (s) => {
+        if (!cancelarTodas) actualizarProgreso(i, pendientes.length, `${especie.name} (${s}s)`);
+      });
+      if (solicitud.status === "done") {
+        ok++;
+        await cargarResultados();
+        renderTabla(solicitud.requirement_id);
+      } else {
+        fallidas++;
+      }
+    } catch (e) {
+      fallidas++;
+    }
+  }
+
+  document.getElementById("progresoFill").style.width = "100%";
+  mostrarProgreso(false);
+  verificandoTodas = false;
+  document.getElementById("btnVerificar").disabled = false;
+  btnTodas.disabled = false;
+
+  if (cancelarTodas) {
+    mostrarEstado(`Verificación masiva detenida. ${ok} completada(s), ${fallidas} con error, antes de cancelar.`, "info");
+  } else {
+    mostrarEstado(`✅ Catálogo verificado contra el país seleccionado: ${ok} completada(s), ${fallidas} con error.`, "info");
+  }
 }
 
 // ── Inicio ──
